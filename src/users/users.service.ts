@@ -96,6 +96,26 @@ export class UsersService {
     }
   }
 
+  async changePassword(userId: string, password: string) {
+    try {
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const response = await this.userModel.findByIdAndUpdate(userId, { password: hashedPassword }, {
+        new: true,
+        runValidators: true,
+      });
+
+      if (!response) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+
+      return { message: 'User updated successfully', user: response };
+    } catch (error) {
+      throw new BadRequestException(error.message || 'Error updating user');
+    }
+  }
+
   async remove(userId: string) {
     try {
       const deletedUser = await this.userModel.findByIdAndDelete(userId);

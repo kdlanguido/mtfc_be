@@ -1,9 +1,11 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, HttpException, HttpStatus } from '@nestjs/common';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Payment } from 'schemas/payment.schema';
 import { Model } from 'mongoose';
+
+
 
 @Injectable()
 export class PaymentsService {
@@ -15,28 +17,40 @@ export class PaymentsService {
   async create(createPaymentDto: CreatePaymentDto) {
     try {
       const { paymentType, paymentCredentials } = createPaymentDto;
-
       if (paymentType === 'card') {
         if (!('cardNo' in paymentCredentials && 'expiryDate' in paymentCredentials && 'nameOnCard' in paymentCredentials)) {
-          throw new BadRequestException('Invalid card payment details.');
+          throw new HttpException('Invalid card payment details.', HttpStatus.BAD_REQUEST);
         }
       } else if (paymentType === 'gcash') {
         if (!('mobileNumber' in paymentCredentials)) {
-          throw new BadRequestException('Invalid GCash payment details.');
+          throw new HttpException('Invalid GCash payment details.', HttpStatus.BAD_REQUEST);
         }
       } else {
-        throw new BadRequestException('Invalid payment type. Must be "card" or "gcash".');
+        throw new HttpException('Invalid payment type. Must be "card" or "gcash".', HttpStatus.BAD_REQUEST);
       }
 
       const newPayment = new this.paymentModel(createPaymentDto);
       const savedPayment = await newPayment.save();
 
-      return { message: 'Payment added successfully', payment: savedPayment };
+      return {
+        statusCode: HttpStatus.CREATED,
+        message: 'Payment added successfully',
+        payment: savedPayment,
+      };
     } catch (error) {
       console.error('Error creating payment:', error);
-      throw new InternalServerErrorException('Failed to process payment. Please try again.');
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        'Failed to process payment. Please try again.',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
+
 
   async findAll() {
     return await this.paymentModel.find().sort({ _id: -1 }).exec();

@@ -13,6 +13,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { TrainersModule } from './trainers/trainers.module';
 import { EquipmentsModule } from './equipments/equipments.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { EquipmentsModule } from './equipments/equipments.module';
     PaymentsModule,
     SessionsModule,
     TrainersModule,
-    EquipmentsModule
+    EquipmentsModule,
+    EmailModule
   ],
   controllers: [AppController],
   providers: [AppService],
