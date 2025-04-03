@@ -87,13 +87,26 @@ export class OrderService {
 
   async findOne(orderId: string) {
     try {
-      const Order = await this.cartModel.findById(orderId).exec();
+      const Order = await this.orderModel.findById(orderId).exec();
 
       if (!Order) {
         throw new NotFoundException('Order not found');
       }
 
       return Order;
+    } catch (error) {
+      throw new BadRequestException('Error during product retrieval');
+    }
+  }
+
+  async findByUserId(userId: string) {
+    try {
+      const order = await this.orderModel.find({ userId }).sort({ _id: -1 }).exec();
+      console.log(order)
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
+      return order;
     } catch (error) {
       throw new BadRequestException('Error during product retrieval');
     }

@@ -31,6 +31,12 @@ export class OrderController {
     return this.orderService.findOne(id);
   }
 
+  @Get('/find-by-userid/:userId')
+  findByUserid(@Param('userId') userId: string) {
+    console.log(userId)
+    return this.orderService.findByUserId(userId);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.orderService.remove(id);
