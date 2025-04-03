@@ -64,13 +64,20 @@ export class SubscriptionsService {
   async findByUserId(userId: string) {
     try {
 
-      const Subscription = await this.subscriptionModel.findOne({ userId }).exec();
-
-      if (!Subscription) {
+      const subscription = await this.subscriptionModel.findOne({ userId }).exec();
+      if (!subscription) {
         throw new NotFoundException('Subscription not found');
       }
 
-      return Subscription;
+      const offerInformation = await this.offerModel.findById(subscription.offerId);
+      if (!offerInformation) {
+        throw new NotFoundException(`Offer with ID ${subscription.offerId} not found`);
+      }
+
+      return {
+        ...subscription.toObject(),  // Convert subscription to a plain object
+        offerInformation
+      };
     } catch (error) {
       throw new BadRequestException('Error during Subscription retrieval');
     }

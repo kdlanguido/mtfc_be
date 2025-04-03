@@ -32,6 +32,11 @@ export class SessionsController {
     return this.sessionsService.findOne(id);
   }
 
+  @Get('/find-user-attendance/:userId')
+  findAllAttendance(@Param('userId') userId: string) {
+    return this.sessionsService.findAllAttendance(userId);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateSessionDto: UpdateSessionDto) {
     return this.sessionsService.update(id, updateSessionDto);

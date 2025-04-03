@@ -14,6 +14,9 @@ import { SessionsModule } from './sessions/sessions.module';
 import { TrainersModule } from './trainers/trainers.module';
 import { EquipmentsModule } from './equipments/equipments.module';
 import { EmailModule } from './email/email.module';
+import { PromotionsModule } from './promotions/promotions.module';
+import { GuestsModule } from './guests/guests.module';
+import { PostsModule } from './posts/posts.module';
 
 @Module({
   imports: [
@@ -29,7 +32,10 @@ import { EmailModule } from './email/email.module';
     SessionsModule,
     TrainersModule,
     EquipmentsModule,
-    EmailModule
+    EmailModule,
+    PromotionsModule,
+    GuestsModule,
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

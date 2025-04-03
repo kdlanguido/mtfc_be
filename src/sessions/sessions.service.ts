@@ -65,6 +65,7 @@ export class SessionsService {
   async findAll() {
     return await this.sessionModel.find().sort({ _id: -1 }).exec();
   }
+
   async findOne(id: string) {
     try {
       const session = await this.sessionModel.findById(id).exec();
@@ -75,6 +76,28 @@ export class SessionsService {
     } catch (error) {
       throw new BadRequestException('Failed to retrieve session');
     }
+  }
+
+  async findAllAttendance(userId: string) {
+    try {
+      const sessions = await this.sessionModel.find({ userId }).exec();
+      if (!sessions || sessions.length === 0) {
+        throw new NotFoundException(`No sessions found for user with ID ${userId}`);
+      }
+      const monthsCount = this.getEntriesPerMonth(sessions);
+      return { sessions, monthsCount };
+    } catch (error) {
+      throw new BadRequestException('Failed to retrieve sessions');
+    }
+  }
+
+  getEntriesPerMonth(data: Session[]) {
+    const monthsCount = Array(12).fill(0);
+    data.forEach(entry => {
+      const month = new Date(entry.date).getMonth();
+      monthsCount[month]++;
+    });
+    return monthsCount;
   }
 
   async update(id: string, updateSessionDto: UpdateSessionDto) {
