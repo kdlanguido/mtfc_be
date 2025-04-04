@@ -4,12 +4,16 @@ import { Model } from 'mongoose';
 import { Post } from '../../schemas/post.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { v4 as uuidv4 } from 'uuid'; // Import uuid to generate unique comment IDs
+import { User } from 'schemas/user.schema';
 
 @Injectable()
 export class PostsService {
-  constructor(@InjectModel(Post.name) private postModel: Model<Post>) {}
+  constructor(
+    @InjectModel(Post.name) private postModel: Model<Post>,
+    @InjectModel(User.name) private UserModel: Model<User>,
+  ) {}
 
-  // Create a new post
   async create(
     createPostDto: CreatePostDto,
   ): Promise<{ message: string; status: number; data: Post }> {
@@ -22,7 +26,6 @@ export class PostsService {
     };
   }
 
-  // Find all posts
   async findAll(): Promise<{ message: string; status: number; data: Post[] }> {
     const posts = await this.postModel.find().sort({ _id: -1 }).exec();
     return {
@@ -32,7 +35,6 @@ export class PostsService {
     };
   }
 
-  // Find a post by ID
   async findOne(
     id: string,
   ): Promise<{ message: string; status: number; data: Post | null }> {
@@ -72,7 +74,6 @@ export class PostsService {
     };
   }
 
-  // Update a post by ID
   async update(
     id: string,
     updatePostDto: UpdatePostDto,
@@ -89,97 +90,6 @@ export class PostsService {
         data: null,
       };
     }
-    return {
-      message: 'Post updated successfully',
-      status: 200,
-      data: updatedPost,
-    };
-  }
-
-  async incrementReact(
-    id: string,
-    userId: string,
-  ): Promise<{ message: string; status: number; data: Post | null }> {
-    const post = await this.postModel.findById(id).exec();
-    if (!post) {
-      return {
-        message: `Post with ID ${id} not found`,
-        status: 404,
-        data: null,
-      };
-    }
-    if (post.userReacted && post.userReacted.includes(userId)) {
-      return {
-        message: `User with ID ${userId} has already reacted to this post.`,
-        status: 400,
-        data: null,
-      };
-    }
-    const updatedPost = await this.postModel
-      .findByIdAndUpdate(
-        id,
-        { $push: { userReacted: userId } }, // Add userId to the userReacted array
-        { new: true },
-      )
-      .exec();
-
-    if (!updatedPost) {
-      return {
-        message: `Post with ID ${id} not found`,
-        status: 404,
-        data: null,
-      };
-    }
-
-    return {
-      message: 'Post updated successfully',
-      status: 200,
-      data: updatedPost,
-    };
-  }
-
-  async decrementReact(
-    id: string,
-    userId: string,
-  ): Promise<{ message: string; status: number; data: Post | null }> {
-    // Find the post by ID
-    const post = await this.postModel.findById(id).exec();
-
-    if (!post) {
-      return {
-        message: `Post with ID ${id} not found`,
-        status: 404,
-        data: null,
-      };
-    }
-
-    // Check if the userId is in the userReacted array
-    if (!post.userReacted || !post.userReacted.includes(userId)) {
-      return {
-        message: `User with ID ${userId} has not reacted to this post.`,
-        status: 400,
-        data: null,
-      };
-    }
-
-    // Remove the userId from the userReacted array
-    const updatedPost = await this.postModel
-      .findByIdAndUpdate(
-        id,
-        {
-          $pull: { userReacted: userId }, // Remove the userId from the userReacted array
-        },
-        { new: true },
-      )
-      .exec();
-
-    if (updatedPost) {
-      const reactsCount = updatedPost.userReacted.length;
-      await this.postModel
-        .findByIdAndUpdate(id, { reactsCount }, { new: true })
-        .exec();
-    }
-
     return {
       message: 'Post updated successfully',
       status: 200,
@@ -251,6 +161,96 @@ export class PostsService {
         data: updatedPost,
       };
     }
+  }
+
+  async addComment(
+    id: string,
+    userId: string,
+    comment: string,
+  ): Promise<{ message: string; status: number; data: Post | null }> {
+    const post = await this.postModel.findById(id).exec();
+    const userData = await this.UserModel.findById(userId).exec();
+
+    if (!post) {
+      return {
+        message: `Post with ID ${id} not found`,
+        status: 404,
+        data: null,
+      };
+    }
+
+    console.log(userData.profileUrl);
+
+    const newComment = {
+      commentId: uuidv4(),
+      fullName: userData.fullName,
+      profileUrl: userData.profileUrl,
+      comment: comment,
+    };
+
+    const updatedPost = await this.postModel
+      .findByIdAndUpdate(
+        id,
+        {
+          $push: { comments: newComment },
+        },
+        { new: true },
+      )
+      .exec();
+
+    if (updatedPost) {
+      return {
+        message: 'Comment added successfully',
+        status: 200,
+        data: updatedPost,
+      };
+    }
+
+    return {
+      message: 'Failed to add comment',
+      status: 500,
+      data: null,
+    };
+  }
+
+  async deleteComment(
+    id: string,
+    commentId: string,
+  ): Promise<{ message: string; status: number; data: Post | null }> {
+    const post = await this.postModel.findById(id).exec();
+
+    if (!post) {
+      return {
+        message: `Post with ID ${id} not found`,
+        status: 404,
+        data: null,
+      };
+    }
+
+    // Find the comment by commentId and remove it from the comments array
+    const updatedPost = await this.postModel
+      .findByIdAndUpdate(
+        id,
+        {
+          $pull: { comments: { commentId: commentId } }, // Remove the comment with the given commentId
+        },
+        { new: true },
+      )
+      .exec();
+
+    if (updatedPost) {
+      return {
+        message: 'Comment deleted successfully',
+        status: 200,
+        data: updatedPost,
+      };
+    }
+
+    return {
+      message: 'Failed to delete comment',
+      status: 500,
+      data: null,
+    };
   }
 
   async remove(

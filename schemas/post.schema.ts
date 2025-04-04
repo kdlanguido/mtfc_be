@@ -18,8 +18,18 @@ export class Post extends Document {
   @Prop({ required: true, type: [String] })
   userReacted: string[];
 
-  @Prop({ required: true, type: [String] })
-  comments: string[];
+  @Prop({
+    required: true,
+    type: [
+      {
+        commentId: { type: String, required: true },
+        fullName: { type: String, required: true },
+        profileUrl: { type: String, required: true },
+        comment: { type: String, required: true },
+      },
+    ],
+  })
+  comments: { commentId: string; userId: string; comment: string }[];
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

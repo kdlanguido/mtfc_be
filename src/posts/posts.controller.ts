@@ -10,6 +10,7 @@ import {
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { AddCommentDto } from './dto/add-comment.dto';
 
 @Controller('posts')
 export class PostsController {
@@ -38,6 +39,24 @@ export class PostsController {
   @Patch('/update-react/:id/:userId')
   updateReact(@Param('id') id: string, @Param('userId') userId: string) {
     return this.postsService.updateReact(id, userId);
+  }
+
+  @Post('/add-comment/:id')
+  async addComment(
+    @Param('id') id: string,
+    @Body() addCommentDto: AddCommentDto,
+  ) {
+    const { userId, comment } = addCommentDto;
+    return this.postsService.addComment(id, userId, comment);
+  }
+
+  @Post('/delete-comment/:id')
+  async deleteComment(
+    @Param('id') id: string,
+    @Body() deleteCommentDto: { commentId: string },
+  ) {
+    const { commentId } = deleteCommentDto;
+    return this.postsService.deleteComment(id, commentId);
   }
 
   @Patch(':id')

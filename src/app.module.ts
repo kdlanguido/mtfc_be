@@ -17,6 +17,7 @@ import { EmailModule } from './email/email.module';
 import { PromotionsModule } from './promotions/promotions.module';
 import { GuestsModule } from './guests/guests.module';
 import { PostsModule } from './posts/posts.module';
+import { InvoicesModule } from './invoices/invoices.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { PostsModule } from './posts/posts.module';
     PromotionsModule,
     GuestsModule,
     PostsModule,
+    InvoicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
