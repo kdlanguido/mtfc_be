@@ -5,35 +5,38 @@ export type EquipmentDocument = Equipment & Document;
 
 @Schema()
 export class VendorDetails {
-    @Prop({ required: true })
-    name: string;
+  @Prop({ required: true })
+  name: string;
 
-    @Prop({ required: true })
-    contactNumber: string;
+  @Prop({ required: true })
+  contactNumber: string;
 
-    @Prop({ required: true })
-    address: string;
+  @Prop({ required: true })
+  address: string;
 }
 
 @Schema()
 export class Equipment {
-    @Prop({ required: true })
-    name: string;
+  @Prop({ required: true })
+  name: string;
 
-    @Prop({ required: true })
-    description: string;
+  @Prop({ required: true })
+  description: string;
 
-    @Prop({ required: true })
-    price: number;
+  @Prop({ required: true })
+  price: number;
 
-    @Prop({ required: false })
-    datePurchased?: Date;
+  @Prop({ required: false })
+  datePurchased?: Date;
 
-    @Prop({ required: false })
-    qty?: number;
+  @Prop({ required: false })
+  qty?: number;
 
-    @Prop({ type: VendorDetails, required: true })
-    vendorDetails: VendorDetails;
+  @Prop()
+  quality: string;
+
+  @Prop({ type: VendorDetails, required: true })
+  vendorDetails: VendorDetails;
 }
 
 export const VendorDetailsSchema = SchemaFactory.createForClass(VendorDetails);
