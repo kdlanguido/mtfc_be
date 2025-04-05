@@ -33,6 +33,11 @@ export class UsersController {
     return this.usersService.authLogin(email, password);
   }
 
+  @Patch('/agree-to-terms/:id')
+  agreeToTerms(@Param('id') id: string) {
+    return this.usersService.agreeToTerms(id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);

@@ -32,4 +32,8 @@ export class RegisterUserDto {
   @IsString()
   @IsOptional()
   fitnessGoal?: string;
+
+  @IsString()
+  @IsOptional()
+  isAgreedToTerms: string;
 }

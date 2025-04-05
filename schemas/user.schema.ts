@@ -28,6 +28,9 @@ export class User {
 
   @Prop({ type: String, required: false })
   fitnessGoal: string;
+
+  @Prop({ type: String, required: false })
+  isAgreedToTerms: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

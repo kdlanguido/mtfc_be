@@ -1,4 +1,9 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -8,10 +13,7 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-
-  constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
-  ) { }
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async register(registerUserDto: RegisterUserDto) {
     const { email, password } = registerUserDto;
@@ -41,7 +43,6 @@ export class UsersService {
   }
 
   async findOne(userId: string) {
-
     try {
       const User = await this.userModel.findById(userId).exec();
 
@@ -81,10 +82,37 @@ export class UsersService {
         updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
       }
 
-      const response = await this.userModel.findByIdAndUpdate(userId, updateUserDto, {
-        new: true,
-        runValidators: true,
-      });
+      const response = await this.userModel.findByIdAndUpdate(
+        userId,
+        updateUserDto,
+        {
+          new: true,
+          runValidators: true,
+        },
+      );
+
+      if (!response) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+
+      return { message: 'User updated successfully', user: response };
+    } catch (error) {
+      throw new BadRequestException(error.message || 'Error updating user');
+    }
+  }
+
+  async agreeToTerms(userId: string) {
+    try {
+      const response = await this.userModel.findByIdAndUpdate(
+        userId,
+        {
+          isAgreedToTerms: 'yes',
+        },
+        {
+          new: true,
+          runValidators: true,
+        },
+      );
 
       if (!response) {
         throw new NotFoundException(`User with ID ${userId} not found`);
@@ -98,13 +126,16 @@ export class UsersService {
 
   async changePassword(userId: string, password: string) {
     try {
-
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const response = await this.userModel.findByIdAndUpdate(userId, { password: hashedPassword }, {
-        new: true,
-        runValidators: true,
-      });
+      const response = await this.userModel.findByIdAndUpdate(
+        userId,
+        { password: hashedPassword },
+        {
+          new: true,
+          runValidators: true,
+        },
+      );
 
       if (!response) {
         throw new NotFoundException(`User with ID ${userId} not found`);
@@ -129,5 +160,4 @@ export class UsersService {
       throw new BadRequestException(error.message || 'Error deleting user');
     }
   }
-
 }

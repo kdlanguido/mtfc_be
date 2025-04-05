@@ -1,22 +1,27 @@
 import { IsString, IsNumber, IsOptional, IsUrl, Min } from 'class-validator';
 
 export class CreateProductDto {
-    @IsString()
-    name: string;
+  @IsString()
+  name: string;
 
-    @IsNumber()
-    @Min(0)
-    price: number;
+  @IsNumber()
+  @Min(0)
+  price: number;
 
-    @IsString()
-    description: string;
+  @IsString()
+  description: string;
 
-    @IsOptional()
-    @IsNumber()
-    @Min(0)
-    ratingScore?: number;
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  ratingScore?: number;
 
-    @IsString()
-    @IsUrl()
-    imgUrl: string;
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  stocks?: number;
+
+  @IsString()
+  @IsUrl()
+  imgUrl: string;
 }
