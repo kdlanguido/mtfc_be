@@ -1,11 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { TrainersService } from './trainers.service';
 import { CreateTrainerDto } from './dto/create-trainer.dto';
 import { UpdateTrainerDto } from './dto/update-trainer.dto';
 
 @Controller('trainers')
 export class TrainersController {
-  constructor(private readonly trainersService: TrainersService) { }
+  constructor(private readonly trainersService: TrainersService) {}
 
   @Post()
   create(@Body() createTrainerDto: CreateTrainerDto) {
@@ -25,12 +35,14 @@ export class TrainersController {
     }
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
+  @Get('/find-by-sport/:instructorFor')
+  findBySport(@Param('instructorFor') instructorFor: string) {
     try {
-      const trainer = this.trainersService.findOne(id);
+      const trainer = this.trainersService.findBySport(instructorFor);
       if (!trainer) {
-        throw new NotFoundException(`Trainer with ID ${id} not found`);
+        throw new NotFoundException(
+          `Trainer with sport ${instructorFor} not found`,
+        );
       }
       return trainer;
     } catch (error) {
@@ -38,12 +50,40 @@ export class TrainersController {
     }
   }
 
-  @Get('/find-by-sport/:instructorFor')
-  findBySport(@Param('instructorFor') instructorFor: string) {
+  @Get('/find-students-by-sport/:instructorFor')
+  findStudentsBySport(@Param('instructorFor') instructorFor: string) {
     try {
-      const trainer = this.trainersService.findBySport(instructorFor);
+      const trainer = this.trainersService.findStudentsBySport(instructorFor);
       if (!trainer) {
-        throw new NotFoundException(`Trainer with sport ${instructorFor} not found`);
+        throw new NotFoundException(
+          `Trainer with sport ${instructorFor} not found`,
+        );
+      }
+      return trainer;
+    } catch (error) {
+      throw new BadRequestException('Failed to fetch trainer');
+    }
+  }
+
+  @Get('/find-by-email/:email')
+  findByEmail(@Param('email') email: string) {
+    try {
+      const trainer = this.trainersService.findByEmail(email);
+      if (!trainer) {
+        throw new NotFoundException(`Trainer with sport ${email} not found`);
+      }
+      return trainer;
+    } catch (error) {
+      throw new BadRequestException('Failed to fetch trainer');
+    }
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    try {
+      const trainer = this.trainersService.findOne(id);
+      if (!trainer) {
+        throw new NotFoundException(`Trainer with ID ${id} not found`);
       }
       return trainer;
     } catch (error) {
@@ -58,7 +98,10 @@ export class TrainersController {
       if (!updatedTrainer) {
         throw new NotFoundException(`Trainer with ID ${id} not found`);
       }
-      return { message: 'Trainer updated successfully', trainer: updatedTrainer };
+      return {
+        message: 'Trainer updated successfully',
+        trainer: updatedTrainer,
+      };
     } catch (error) {
       throw new BadRequestException('Failed to update trainer');
     }

@@ -18,6 +18,7 @@ import { PromotionsModule } from './promotions/promotions.module';
 import { GuestsModule } from './guests/guests.module';
 import { PostsModule } from './posts/posts.module';
 import { InvoicesModule } from './invoices/invoices.module';
+import { CalendarsModule } from './calendars/calendars.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { InvoicesModule } from './invoices/invoices.module';
     GuestsModule,
     PostsModule,
     InvoicesModule,
+    CalendarsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
