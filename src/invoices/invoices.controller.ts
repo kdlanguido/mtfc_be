@@ -27,16 +27,21 @@ export class InvoicesController {
     return this.invoicesService.findAll();
   }
 
-  // Get a single invoice by its ID
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.invoicesService.findOne(id); // id is a string, no need to convert
+  @Get('/find-monthly-salesreport')
+  findMonthlySalesTotals() {
+    return this.invoicesService.findMonthlySalesTotals(); // id is a string, no need to convert
   }
 
   // Get a single invoice by its ID
   @Get('/find-by-userid/:id')
   findByUserId(@Param('id') id: string) {
     return this.invoicesService.findByUserId(id); // id is a string, no need to convert
+  }
+
+  // Get a single invoice by its ID
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.invoicesService.findOne(id); // id is a string, no need to convert
   }
 
   // Update an invoice by its ID

@@ -5,7 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Invoice } from 'schemas/invoices.schema';
 import { Model } from 'mongoose';
 import { User } from 'schemas/user.schema';
-import { Types } from 'mongoose';
+import { Types, PipelineStage } from 'mongoose';
 
 @Injectable()
 export class InvoicesService {
@@ -31,6 +31,7 @@ export class InvoicesService {
       };
     }
   }
+
   async findAll() {
     try {
       // Fetch all invoices, sorted by _id in descending order
@@ -71,6 +72,53 @@ export class InvoicesService {
         message: 'Error fetching invoices',
         status: 500, // Internal Server Error
       };
+    }
+  }
+
+  async findMonthlySalesTotals(): Promise<number[]> {
+    try {
+      const year = new Date().getFullYear();
+
+      const pipeline: PipelineStage[] = [
+        {
+          $match: {
+            transaction: 'order',
+            invoiceDate: {
+              $gte: new Date(`${year}-01-01T00:00:00Z`),
+              $lte: new Date(`${year}-12-31T23:59:59Z`),
+            },
+          },
+        },
+        {
+          $group: {
+            _id: { $month: '$invoiceDate' }, // Group by month (1-12)
+            total: { $sum: '$amount' },
+          },
+        },
+        {
+          $project: {
+            month: { $subtract: ['$_id', 1] }, // Convert to 0-based index (0-11)
+            total: 1,
+            _id: 0,
+          },
+        },
+        {
+          $sort: { month: 1 },
+        },
+      ];
+
+      const results = await this.invoiceModel.aggregate(pipeline);
+
+      const monthlyTotals = Array(12).fill(0);
+
+      results.forEach((result) => {
+        monthlyTotals[result.month] = result.total;
+      });
+
+      return monthlyTotals;
+    } catch (error) {
+      console.error('Aggregation error:', error);
+      throw new Error('Failed to fetch monthly sales totals');
     }
   }
 

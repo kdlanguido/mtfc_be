@@ -1,20 +1,23 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Subscription } from 'schemas/subscriptions.schema';
 import { Model } from 'mongoose';
 import { Offer } from 'schemas/offers.schema';
-import { addMonths, addDays, addYears } from "date-fns";
+import { addMonths, addDays, addYears } from 'date-fns';
 
 @Injectable()
 export class SubscriptionsService {
-
   constructor(
-    @InjectModel(Subscription.name) private subscriptionModel: Model<Subscription>,
+    @InjectModel(Subscription.name)
+    private subscriptionModel: Model<Subscription>,
     @InjectModel(Offer.name) private offerModel: Model<Offer>,
-
-  ) { }
+  ) {}
 
   async create(createSubscriptionDto: CreateSubscriptionDto) {
     try {
@@ -22,23 +25,33 @@ export class SubscriptionsService {
 
       const existingSubscription = await this.subscriptionModel.findOne({
         userId,
-        status: { $in: ["pending", "active"] },
+        status: { $in: ['pending', 'active'] },
       });
 
       if (existingSubscription) {
-        return { status: "error", message: "User already has an active or pending subscription." };
+        return {
+          status: 'error',
+          message: 'User already has an active or pending subscription.',
+        };
       }
 
       const newSubscription = new this.subscriptionModel({
         ...createSubscriptionDto,
         dateApplied: new Date(),
-        status: "pending",
+        status: 'pending',
       });
 
       const savedSubscription = await newSubscription.save();
-      return { status: "success", message: "Subscription added successfully", subscription: savedSubscription };
+      return {
+        status: 'success',
+        message: 'Subscription added successfully',
+        subscription: savedSubscription,
+      };
     } catch (error) {
-      return { status: "error", message: `Failed to create subscription: ${error.message}` };
+      return {
+        status: 'error',
+        message: `Failed to create subscription: ${error.message}`,
+      };
     }
   }
 
@@ -46,10 +59,27 @@ export class SubscriptionsService {
     return await this.subscriptionModel.find().sort({ _id: -1 }).exec();
   }
 
+  async findAllExpired() {
+    const expiredSubscriptions = await this.subscriptionModel
+      .find({ status: 'expired' })
+      .sort({ _id: -1 })
+      .exec();
+    return expiredSubscriptions;
+  }
+
+  async findAllCancelled() {
+    const expiredSubscriptions = await this.subscriptionModel
+      .find({ status: 'cancelled' })
+      .sort({ _id: -1 })
+      .exec();
+    return expiredSubscriptions;
+  }
+
   async findOne(subscriptionId: string) {
     try {
-
-      const Subscription = await this.subscriptionModel.findById(subscriptionId).exec();
+      const Subscription = await this.subscriptionModel
+        .findById(subscriptionId)
+        .exec();
 
       if (!Subscription) {
         throw new NotFoundException('Subscription not found');
@@ -63,20 +93,25 @@ export class SubscriptionsService {
 
   async findByUserId(userId: string) {
     try {
-
-      const subscription = await this.subscriptionModel.findOne({ userId }).exec();
+      const subscription = await this.subscriptionModel
+        .findOne({ userId })
+        .exec();
       if (!subscription) {
         throw new NotFoundException('Subscription not found');
       }
 
-      const offerInformation = await this.offerModel.findById(subscription.offerId);
+      const offerInformation = await this.offerModel.findById(
+        subscription.offerId,
+      );
       if (!offerInformation) {
-        throw new NotFoundException(`Offer with ID ${subscription.offerId} not found`);
+        throw new NotFoundException(
+          `Offer with ID ${subscription.offerId} not found`,
+        );
       }
 
       return {
-        ...subscription.toObject(),  // Convert subscription to a plain object
-        offerInformation
+        ...subscription.toObject(), // Convert subscription to a plain object
+        offerInformation,
       };
     } catch (error) {
       throw new BadRequestException('Error during Subscription retrieval');
@@ -85,42 +120,55 @@ export class SubscriptionsService {
 
   async update(id: string, updateSubscriptionDto: UpdateSubscriptionDto) {
     try {
-      const updatedSubscription = await this.subscriptionModel.findByIdAndUpdate(
-        id,
-        updateSubscriptionDto,
-        { new: true, runValidators: true }
-      );
+      const updatedSubscription =
+        await this.subscriptionModel.findByIdAndUpdate(
+          id,
+          updateSubscriptionDto,
+          { new: true, runValidators: true },
+        );
 
       if (!updatedSubscription) {
         throw new NotFoundException(`Subscription with ID ${id} not found`);
       }
 
-      return { message: 'Subscription updated successfully', Subscription: updatedSubscription };
+      return {
+        message: 'Subscription updated successfully',
+        Subscription: updatedSubscription,
+      };
     } catch (error) {
-      throw new BadRequestException(`Failed to update Subscription: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to update Subscription: ${error.message}`,
+      );
     }
   }
 
   async acceptMembership(subscriptionId: string) {
     try {
-      const subscriptionInformation = await this.subscriptionModel.findById(subscriptionId);
+      const subscriptionInformation =
+        await this.subscriptionModel.findById(subscriptionId);
       if (!subscriptionInformation) {
-        throw new NotFoundException(`Subscription with ID ${subscriptionId} not found`);
+        throw new NotFoundException(
+          `Subscription with ID ${subscriptionId} not found`,
+        );
       }
 
-      const offerInformation = await this.offerModel.findById(subscriptionInformation.offerId);
+      const offerInformation = await this.offerModel.findById(
+        subscriptionInformation.offerId,
+      );
       if (!offerInformation) {
-        throw new NotFoundException(`Offer with ID ${subscriptionInformation.offerId} not found`);
+        throw new NotFoundException(
+          `Offer with ID ${subscriptionInformation.offerId} not found`,
+        );
       }
 
       const startDate = new Date();
       let endDate: Date;
 
       switch (offerInformation.name) {
-        case "daily":
+        case 'daily':
           endDate = addDays(startDate, 1);
           break;
-        case "monthly":
+        case 'monthly':
           endDate = addMonths(startDate, 1);
           break;
         default:
@@ -128,64 +176,89 @@ export class SubscriptionsService {
           break;
       }
 
-      const updatedSubscription = await this.subscriptionModel.findByIdAndUpdate(
-        subscriptionId,
-        {
-          status: "active",
-          startDate,
-          endDate,
-        },
-        { new: true, runValidators: true }
-      );
+      const updatedSubscription =
+        await this.subscriptionModel.findByIdAndUpdate(
+          subscriptionId,
+          {
+            status: 'active',
+            startDate,
+            endDate,
+          },
+          { new: true, runValidators: true },
+        );
 
       if (!updatedSubscription) {
-        throw new NotFoundException(`Subscription with ID ${subscriptionId} not found after update`);
+        throw new NotFoundException(
+          `Subscription with ID ${subscriptionId} not found after update`,
+        );
       }
 
-      return { message: "Subscription updated successfully", subscription: updatedSubscription };
+      return {
+        message: 'Subscription updated successfully',
+        subscription: updatedSubscription,
+      };
     } catch (error) {
-      console.error("Error updating subscription:", error);
-      throw new BadRequestException(`Failed to update subscription: ${error.message}`);
+      console.error('Error updating subscription:', error);
+      throw new BadRequestException(
+        `Failed to update subscription: ${error.message}`,
+      );
     }
   }
 
   async cancelMembership(subscriptionId: string) {
     try {
-      const subscriptionInformation = await this.subscriptionModel.findById(subscriptionId);
+      const subscriptionInformation =
+        await this.subscriptionModel.findById(subscriptionId);
       if (!subscriptionInformation) {
-        throw new NotFoundException(`Subscription with ID ${subscriptionId} not found`);
+        throw new NotFoundException(
+          `Subscription with ID ${subscriptionId} not found`,
+        );
       }
 
-      const updatedSubscription = await this.subscriptionModel.findByIdAndUpdate(
-        subscriptionId,
-        {
-          status: "expired",
-        },
-        { new: true, runValidators: true }
-      );
+      const updatedSubscription =
+        await this.subscriptionModel.findByIdAndUpdate(
+          subscriptionId,
+          {
+            status: 'expired',
+          },
+          { new: true, runValidators: true },
+        );
 
       if (!updatedSubscription) {
-        throw new NotFoundException(`Subscription with ID ${subscriptionId} not found after update`);
+        throw new NotFoundException(
+          `Subscription with ID ${subscriptionId} not found after update`,
+        );
       }
 
-      return { message: "Subscription updated successfully", subscription: updatedSubscription };
+      return {
+        message: 'Subscription updated successfully',
+        subscription: updatedSubscription,
+      };
     } catch (error) {
-      console.error("Error updating subscription:", error);
-      throw new BadRequestException(`Failed to update subscription: ${error.message}`);
+      console.error('Error updating subscription:', error);
+      throw new BadRequestException(
+        `Failed to update subscription: ${error.message}`,
+      );
     }
   }
 
   async remove(id: string) {
     try {
-      const deletedSubscription = await this.subscriptionModel.findByIdAndDelete(id);
+      const deletedSubscription =
+        await this.subscriptionModel.findByIdAndDelete(id);
 
       if (!deletedSubscription) {
         throw new NotFoundException(`Subscription with ID ${id} not found`);
       }
 
-      return { message: 'Subscription removed successfully', Subscription: deletedSubscription };
+      return {
+        message: 'Subscription removed successfully',
+        Subscription: deletedSubscription,
+      };
     } catch (error) {
-      throw new BadRequestException(`Failed to remove Subscription: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to remove Subscription: ${error.message}`,
+      );
     }
   }
 }

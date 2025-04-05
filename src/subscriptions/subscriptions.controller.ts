@@ -1,12 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 
-
 @Controller('subscriptions')
 export class SubscriptionsController {
-  constructor(private readonly subscriptionsService: SubscriptionsService) { }
+  constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
   @Post()
   create(@Body() createSubscriptionDto: CreateSubscriptionDto) {
@@ -18,9 +25,14 @@ export class SubscriptionsController {
     return this.subscriptionsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.subscriptionsService.findOne(id);
+  @Get('/find-all-expired')
+  findAllExpired() {
+    return this.subscriptionsService.findAllExpired();
+  }
+
+  @Get('/find-all-cancelled')
+  findAllCancelled() {
+    return this.subscriptionsService.findAllCancelled();
   }
 
   @Get('/user-subscription/:id')
@@ -38,8 +50,16 @@ export class SubscriptionsController {
     return this.subscriptionsService.cancelMembership(id);
   }
 
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.subscriptionsService.findOne(id);
+  }
+
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSubscriptionDto: UpdateSubscriptionDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateSubscriptionDto: UpdateSubscriptionDto,
+  ) {
     return this.subscriptionsService.update(id, updateSubscriptionDto);
   }
 
